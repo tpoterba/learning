@@ -5,6 +5,9 @@
 <h3>Format docstrings by placing optimal line breaks.<br>Hit enter to format code.</h3>
 Maximum line width:<br>
 <input type="int" id='width' name="width" value="80">
+<br>Prepend spaces:<br>
+<input type="int" id='spaces' name="spaces" value="0">
+
 
 <br>Code to format:<br>
 <form id='form1'>
@@ -26,6 +29,16 @@ function checkKey(e) {
 </script>
 
 <script>
+function repeat(str, count) {
+    var array = [];
+    for (i = 0; i < count; i++) {
+        array[i] = str;
+    }
+    return array.join('');
+}
+</script>
+
+<script>
 function format() {
     var code = document.getElementById("toFormat").value;
     var width = document.getElementById("width").value;
@@ -39,6 +52,8 @@ function format() {
     current_line = [];
     lines = [];
     
+    var to_prepend = repeat(' ', document.getElementById('spaces').value);
+
     for (i = start; i < words.length; i++) {
         word = words[i]
         if (i == 0) {
@@ -47,7 +62,7 @@ function format() {
         } else {
             if (len + word.length >= width) {
                 // line break
-                lines.push(current_line.join(' '));
+                lines.push(to_prepend + current_line.join(' '));
                 current_line = [word];
                 len = word.length;
             } else {
@@ -56,7 +71,8 @@ function format() {
             }
         }
     }
-    lines.push(current_line.join(' '));
+
+    lines.push(to_prepend + current_line.join(' '));
     var formatted = lines.join('\n');
 
     document.getElementById("toFormat").value = formatted;
