@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>Format docstrings by placing optimal line breaks.<br>Hit enter to format code.</h3>
+Maximum line width:<br>
+<input type="int" id='width' name="width" value="80">
+
+<br>Code to format:<br>
+<form id='form1'>
+<textarea id="toFormat" name="toFormat" rows="15" cols="120" onkeypress="checkKey(event, this);">
+</textarea>
+</form>
+
+
+<script> 
+function checkKey(e) {
+   var code = (e.keyCode ? e.keyCode : e.which);
+    if (code == 13) {
+        format();
+        return false;
+    } else {
+        return true;
+    }
+}
+</script>
+
+<script>
+function format() {
+    var code = document.getElementById("toFormat").value;
+    var width = document.getElementById("width").value;
+
+    var words = code.split(/\s+/g);
+    var start = 0;
+    if (words.length > 0 && words[0] == '') {
+        start = 1;
+    }
+    var len = 0;
+    current_line = [];
+    lines = [];
+    
+    for (i = start; i < words.length; i++) {
+        word = words[i]
+        if (i == 0) {
+            current_line.push(word);
+            len += word.length;
+        } else {
+            if (len + word.length > width) {
+                // line break
+                lines.push(current_line.join(' '));
+                current_line = [word];
+                len = word.length;
+            } else {
+                current_line.push(word);
+                len += word.length;
+            }
+        }
+    }
+    lines.push(current_line.join(' '));
+    var formatted = lines.join('\n');
+
+    document.getElementById("toFormat").value = formatted;
+
+}
+</script>
+
+</body>
+</html>
