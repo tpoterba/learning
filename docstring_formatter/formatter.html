@@ -45,14 +45,14 @@ function format() {
             current_line.push(word);
             len += word.length;
         } else {
-            if (len + word.length > width) {
+            if (len + word.length >= width) {
                 // line break
                 lines.push(current_line.join(' '));
                 current_line = [word];
                 len = word.length;
             } else {
                 current_line.push(word);
-                len += word.length;
+                len += word.length + 1;
             }
         }
     }
