@@ -1,0 +1,157 @@
+<html>
+  <header>
+    <title>PR Scorecard</title>
+    <style type="text/css">
+      td { padding: 0 20px 0 0; }
+      th { padding: 0 20px 0 0; }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+      users = ['danking', 'cseed', 'tpoterba', 'jigold', 'jbloom22', 'catoverdrive', 'patrick-schultz']
+      random_user = users[Math.floor(Math.random()*users.length)];
+      
+      $(document).ready(function() {
+	  $("#user").replaceWith("<p>Random user: " + random_user + "</p>");
+	  $("#github_avatar").attr("src", "https://www.github.com/" + random_user + ".png")
+	  
+	  unassigned = []
+	  approved = []
+	  changes_requested = []
+	  needs_review = []
+	  
+	  $.ajax({
+	      url: "https://api.github.com/search/issues?q=repo:hail-is/hail+state:open+type:pr",
+	      dataType: 'json',
+	      success: function(response) {
+		  reviews = []
+		  items = response['items']
+		  for (i = 0; i < items.length; ++i) {
+		      item = items[i]
+		      
+		      if (item['assignee'] == null) {
+			  unassigned.push(item);
+		      } else {
+			  (function (item) {
+			      reviews.push($.ajax({
+				  url: item['pull_request']['url'] + '/reviews',
+				  dataType: 'json',
+				  success: function(response) {
+				      done = false;
+				      for (j = response.length - 1; j >= 0 && !done; --j) {
+					  review = response[j];
+					  
+					  if (review['state'] == 'APPROVED') {
+					      approved.push(item);
+					      done = true;
+					  } else if (review['state'] == 'CHANGES_REQUESTED') {
+					      changes_requested.push(item);
+					      done = true;
+					  }
+				      }
+				      if (!done) {
+					  needs_review.push(item);
+				      }
+				  }
+			      }));
+			  })(item);
+		      }
+		  }
+		  
+		  $.when.apply(null, reviews).done(function() {
+		      div = $("#github");
+
+		      unassigned_html = ''
+		      for (i = 0; i < unassigned.length; ++i) {
+			  item = unassigned[i];
+			  if (i > 0)
+			      unassigned_html = unassigned_html + ' ';
+			  unassigned_html = unassigned_html + '<a href="' + item['html_url'] + '">' + item['number'] + '</a>';
+		      }
+		      div.append('<p>unassigned: ');
+		      
+		      approved_html = ''
+		      for (i = 0; i < approved.length; ++i) {
+			  item = approved[i];
+			  if (i > 0)
+			      approved_html = approved_html + ' ';
+			  approved_html = approved_html + '<a href="' + item['html_url'] + '">' + item['number'] + '</a>';
+		      }
+		      div.append('<p>approved: ' + approved_html);
+		      
+		      tbody = $("#github tbody");
+		      
+		      work = {}
+		      
+		      for (i = 0; i < changes_requested.length; ++i) {
+			  item = changes_requested[i];
+			  user = item['user']['login']
+			  if (! (user in work)) {
+			      work[user] = {'needs_review': [], 'changes_requested': []};
+			  }
+			  work[user]['changes_requested'].push(item)
+		      }
+
+		      for (i = 0; i < needs_review.length; ++i) {
+			  item = needs_review[i];
+			  assignee = item['assignee']['login']
+			  if (! (assignee in work)) {
+			      work[assignee] = {'needs_review': [], 'changes_requested': []};
+			  }
+			  work[assignee]['needs_review'].push(item)
+		      }
+		      
+		      keys = []
+		      for (u in work) {
+			  keys.push(u)
+		      }
+		      keys.sort()
+		      
+		      for (j = 0; j < keys.length; ++j) {
+			  u = keys[j];
+			  
+			  w = work[u];
+			  uchanges_requested = w['changes_requested'];
+			  uchanges_requested_html = '';
+			  for (i = 0; i < uchanges_requested.length; ++i) {
+			      item = uchanges_requested[i];
+			      if (i > 0)
+				  uchanges_requested_html = uchanges_requested_html + ' ';
+			      
+			      uchanges_requested_html = uchanges_requested_html + '<a href="' + item['html_url'] + '">' + item['number'] + '</a>';
+			  }
+			  
+			  uneeds_review = w['needs_review']
+			  uneeds_review_html = ''
+			  for (i = 0; i < uneeds_review.length; ++i) {
+			      item = uneeds_review[i];
+			      if (i > 0)
+				  uneeds_review_html = uneeds_review_html + ' ';
+			      
+			      uneeds_review_html = uneeds_review_html + '<a href="' + item['html_url'] + '">' + item['number'] + '</a>';
+			  }
+			  
+			  tr = $('<tr><td align="left">' + u + '</td><td align="left">' + uneeds_review_html + '</td><td align="left">' + uchanges_requested_html + '</td></tr>')
+			  tbody.append(tr)
+		      }
+		  });
+	      }
+	  });
+      });
+    </script>
+  </header>
+  <body>
+    <div id="github">
+      <table>
+	<table><thead>
+	    <tr><th align="left">user</th><th align="left">needs review</th><th align="left">changes requested</th></tr>
+	  </thead>
+	  <tbody></tbody>
+	</table>
+    </div>
+    
+    <p id="user">Random user:</p>
+    <br>
+    <img src="" id="github_avatar"> 
+  </body>
+</html>
+    
