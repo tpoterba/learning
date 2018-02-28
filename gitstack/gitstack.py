@@ -5,13 +5,14 @@ N_TO_PRINT = 10
 l = []
 pattern = re.compile(r".*checkout: moving from ([^\s]+) to ([^\s]+)\s*")
 
-def append_branch(branch):
-    if not branch in l:
-        l.append(branch)
-    if len(l) == N_TO_PRINT:
-        for b in l:
-            print(b)
-        sys.exit(0)
+def end():
+    s = 'Last {} git branches:'.format(len(l))
+    print(s)
+    print('-' * len(s))
+
+    for b in l:
+        print(b)
+    sys.exit(0)
 
 for line in sys.stdin:
     match = pattern.match(line)
@@ -19,4 +20,8 @@ for line in sys.stdin:
         groups = match.groups()
         for g in groups:
             if not g in l:
-                append_branch(g)
+                l.append(g)
+                if len(l) == N_TO_PRINT:
+                    end()
+
+end()
