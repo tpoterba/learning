@@ -1,7 +1,7 @@
 import sys
 import re
 
-N_TO_PRINT = 10
+N_TO_PRINT = 20
 l = []
 pattern = re.compile(r".*checkout: moving from ([^\s]+) to ([^\s]+)\s*")
 
